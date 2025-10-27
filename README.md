@@ -4,7 +4,7 @@ A collection of handy Clojure utilities and language extensions.
 
 Aka [trashy little subroutines](https://github.com/chrislgarry/Apollo-11/blob/422050965990dfa8ad1ffe4ae92e793d7d1ddae5/Luminary099/LUNAR_LANDING_GUIDANCE_EQUATIONS.agc#L1375). 
 
-[API Documentation](https://candelbio.github.io/multitool)
+[API Documentation](https://hyperphor.github.io/multitool)
 
 
 This has managed to avoid having (almost) any dependencies except for Clojure itself. 
@@ -36,7 +36,15 @@ You will need to supply credentials (user name and authentication token).
     TODO push to github has an action which publishes but is not yet smart enough to run this first. 
 	This https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow might help
 
+# History
+
+pre-2020 mtu 
+2020 renamed and developed at Parker Institute, 
+2022? opensourced to CandelBio,
+2025 forked to Hyperphor
+
+
 # License
 
 Released under Apache 2 license. See the [LICENSE](LICENSE.md) file for details.
-s
+
