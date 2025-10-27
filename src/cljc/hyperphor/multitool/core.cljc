@@ -1645,6 +1645,7 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   [p range]
   (rand-range (- p range) (+ p range)))
 
+;;; Note: in clojure.core as rand-nth
 (defn random-element
   "Return a random element from a seq"
   [seq]
@@ -1654,6 +1655,8 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   "Return n random elements from a seq"
   [n seq]
   (repeatedly n #(random-element seq)))
+
+;;; Shuffle is in clojure.core
 
 ;;; Is this generally useful?
 (defn samples-by
