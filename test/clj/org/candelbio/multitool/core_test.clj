@@ -308,8 +308,10 @@ WHERE {{time-filter-clause}}
 
 (deftest error-handling-fn-test
   (let [ed (error-handling-fn /)]
-    (is (= '(true 2/3) (ed 2 3)))
-    (is (= '(false "Caught exception: java.lang.ArithmeticException: Divide by zero") (ed 2 0)))))
+    (is (= [true 2/3] (ed 2 3)))
+    (is (= false (first (ed 2 0))))
+    (is (instance? Exception (second (ed 2 0))))
+    ))
 
 (deftest vectorize-test
   (let [+* (vectorize +)]
@@ -4261,15 +4263,4 @@ WHERE {{time-filter-clause}}
   (is (= #{:foo :bar} (set-toggle #{:foo} :bar)))
   (is (= #{:bar} (set-toggle nil :bar))))
 
-(def reshape-fat-data
-  [{:id 1 :prop :name :value "Bob" }
-   {:id 1 :prop :slack :value :high }
-   {:id 2 :prop :name :value "Antibob" }
-   {:id 2 :prop :slack :value :low }
-   {:id 2 :prop :pink :value true }])
 
-
-(deftest reshape-fat-test
-  (is (= (set [{:name "Bob", :slack :high, :id 1}
-               {:name "Antibob", :slack :low, :pink true, :id 2}])
-         (set (reshape-fat reshape-fat-data :id :prop :value)))))

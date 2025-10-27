@@ -19,9 +19,6 @@
 
 ;;; See https://github.com/clojure/core.memoize/ for more a elaborate memoization tool.
 
-;;; It would probably be cleaner to use the function metadata, but I want to be able
-;;; to clear them all.
-
 (def memoizers (atom {}))
 
 (defn memoize-named
@@ -36,14 +33,6 @@
           (swap! mem assoc args ret)
           ret)))))
 
-(defn memoize-reset!
-  "Clear the cache of one or all memoized fns"
-  ([]
-   (doseq [[_ mem] @memoizers]
-     (reset! mem {})))
-  ([name]
-   (reset! (get @memoizers name) {})))
-
 (defn memoize-cache
   "Return the cache (map of args to values) for a named memoizer."
   [name]
@@ -54,6 +43,14 @@
   []
   (zipmap (keys @memoizers)
           (map (comp count deref) (vals @memoizers))))
+
+(defn memoize-reset!
+  "Clear the cache of one or all memoized fns"
+  ([]
+   (doseq [[_ mem] @memoizers]
+     (reset! mem {})))
+  ([name]
+   (reset! (get @memoizers name) {})))
 
 (macros/deftime
 ;;; TODO This and its usages needs to be reworked for CLJS (Why? Macros probably)
@@ -100,15 +97,16 @@
         (catch ~(macros/case :clj Throwable :cljs :default) e#
           e#)))
 )
+
 (defn error-handling-fn
-  "Returns a fn that acts like f, but return value is (true result) or (false errmsg) in the case of an error"
+  "Returns a fn that acts like f, but return value is [true result] or [false exception] in the case of an error"
   [f]
   (fn [& args]
     (try
       (let [res (apply f args)]
-        (list true res))
+        [true res])
       (catch  #?(:clj Throwable :cljs :default) e
-        (list false (str "Caught exception: " e))))))
+        [false e]))))
 
 ;;; ⩇⩆⩇ Strings ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
@@ -119,7 +117,6 @@
         (coll? thing) (apply str thing)
         :else (str thing)))
 
-;;; Could be more performant
 (defn string-includes-uncased?
   "Case insensitive version of str/includes?" 
   [s substr]
@@ -490,6 +487,10 @@
   [v]
   (if (nullish? v) nil v))
 
+(defn trueish?
+  [x]
+  (if x true false))
+
 (defn truthy?
   "Return false if x is nil or false, true otherwise"
   [x]
@@ -499,8 +500,6 @@
   "Given a 1-arg pred, return a new fn that acts as identity if pred is true, nil otherwise"
   [pred]
   (fn [thing] (if (pred thing) thing nil)))
-
-
 
 (defn- generalize-comparator
   [comp]
@@ -533,10 +532,6 @@
   "Return a seq padded out to infinity with nils"
   [seq]
   (concat seq (repeat nil)))
-
-(defn trueish?
-  [x]
-  (if x true false))
 
 ;;; I thought split-with did this, but no. Surely this in core?
 (defn divide-with
@@ -1166,8 +1161,9 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
                 map)))
 
 ;;; Stolen from https://gitlab.com/kenrestivo/utilza/-/blob/master/src/utilza/misc.clj?ref_type=heads#L252
+;;; TODO maybe belongs in Way
 
-(defn redact
+(defn redact-key
   "Takes a map and a key.
    Walks the map, if the key is anywhere in there, and has a value, redacts it.
    Used for hiding passwords in log files."
@@ -1182,9 +1178,16 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
    Walks the map, if the key is anywhere in there, and has a value, redacts it.
    Used for hiding passwords in log files."
   [m ks]
-  (reduce redact m ks))
+  (reduce redact-key m ks))
+
+(def redactable #{"token" "api" "key" "cred" "creds" "credential" "credentials" "password" "secret"})
+
+(defn redact
+  [m]
+  (redact-keys m redactable))
 
 ;;; TODO delete by predicate (medley/remove-keys)
+;;; TODO recursive version
 (defn delete-keys
   [map key-seq]
   "Returns a map containing only those entries in map whose key is NOT in key-seq. Inverse of select-keys"
@@ -1280,7 +1283,7 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
 ;;; ⩇⩆⩇ Collecters ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
 ;;; Warning: these work via side-effects so beware of lazy seq evaluation;
-;;; You probably need to use deseq instead of for/map
+;;; You probably need to use doseq instead of for/map
 
 (defn make-collecter
   [init collect-fn]
@@ -1433,6 +1436,8 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
         e
       (:value (ex-data e)))))
 
+;;; TODO the path in question is not really sufficient for navigation due to special treatment of keywrds, maybe try to generalize
+;;; TODO if that worked, you could do struct-ancestor to do a cheap, inefficient version of bk's reversable structures
 (defn walk-find-path
   "Walk over thing and return [<the first val for which f is non-nil>, <path>]"
   [f thing]
@@ -1500,12 +1505,12 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
 ;;; ⩇⩆⩇ Sets and Bags ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
 (defn set=
-  "True if c1 and c2 are equal considered as sets"
+  "True if collections c1 and c2 are equal considered as sets"
   [c1 c2]
   (= (set c1) (set c2)))
 
 (defn bag=
-  "True if c1 and c2 are equal considered as bags"
+  "True if collections c1 and c2 are equal considered as bags"
   [c1 c2]
   (and (= (count c1) (count c2))
        (set= c1 c2)))
@@ -1516,7 +1521,7 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   (conj (set coll) elt))
 
 (defn powerset
-  "Compute the powerset of a set"
+  "Compute the powerset P(s) of a set"
   [s]
   (if (empty? s) #{#{}}
       (let [elt (set (list (first s)))
@@ -1564,7 +1569,6 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   "Given f, produce new function that will return original if exception is thrown. Not recommended for production code"
   [f]
   (fn [x] (or (ignore-errors (f x)) x)))
-
 
 (defn transitive-closure 
   "f is a fn of one arg that returns a list. Returns a new fn that computes the transitive closure of f."
@@ -1738,17 +1742,3 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   [attr hashmap]
   (map-key-values (fn [k v] (assoc v attr k)) hashmap))
 
-;;; ⩇⩆⩇ Mapseqs (aka "data") ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
-
-;;; Note: these are for casual use, you probably want tablecloth if doing a lot of data operations
-
-(defn reshape-fat
-  "Reshape a mapseq from skinny to fat"
-  [mapseq id-col prop-col val-col]
-  (map (fn [[id cols]]
-         (assoc (zipmap (map prop-col cols)
-                        (map val-col cols))
-                id-col id))
-       (group-by id-col mapseq)))
-
-;;; TODO reshape-skinny
