@@ -1,5 +1,7 @@
 ;;; Ideally merge this with the clj tests as a cljc file, but for now doing it separately
 
+;;; TODO naturally there has been divergence
+
 (ns hyperphor.multitool.core-test
   (:require [cljs.test :refer-macros [deftest is testing run-tests]]
             [hyperphor.multitool.core :as sut :refer-macros [ignore-errors doseq* for* forcat]]
@@ -60,8 +62,8 @@
 (deftest some-thing-test
   (is (= 2 (sut/some-thing even? '(1 2 3 4)))))
 
-(deftest repeat-until-test
-  (is (= 16 (sut/repeat-until #(> % 10) #(* % 2) 1))))
+(deftest iterate-until-test
+  (is (= 16 (sut/iterate-until #(> % 10) #(* % 2) 1))))
 
 (deftest remove=-test
   (is (= '(0 1 3 4) (sut/remove= 2 (range 5))))
@@ -203,31 +205,37 @@
   (testing "Double braces (default)"
     (let [template "The {{foo}} must have {{bar}}!"
           bindings1 {:foo "subgenius" :bar "slack"}
-          bindings2 {:foo "dog"}]
+      ]
       (is (= "The subgenius must have slack!"
-             (sut/expand-template template bindings1)))
-      (is (= "The dog must have !"
-             (sut/expand-template template bindings2))))
+             (expand-template template bindings1)))
+      )
     )
   (testing "Javascript templating, keywords"
     (let [template "The ${foo} must have ${bar}!"
           bindings1 {:foo "subgenius" :bar "slack"}]
       (is (= "The subgenius must have slack!"
-             (sut/expand-template template bindings1 :param-regex sut/param-regex-javascript)))
+             (expand-template template bindings1 :param-regex param-regex-javascript)))
       ))
   (testing "fix bad parse"
     (is (= "{'foo': foo}"
-           (sut/expand-template "{'{{a}}': {{a}}}" {:a "foo"}))))
+           (expand-template "{'{{a}}': {{a}}}" {:a "foo"}))))
   (testing "hyphens in var names"
     (is (= "{'foo': foo}"
-           (sut/expand-template "{'{{a-ha}}': {{a-ha}}}" {:a-ha "foo"}))))
+           (expand-template "{'{{a-ha}}': {{a-ha}}}" {:a-ha "foo"}))))
   (testing "underscores in var names"
     (is (= "{'foo': foo}"
-           (sut/expand-template "{'{{a_ha}}': {{a_ha}}}" {:a_ha "foo"}))))
+           (expand-template "{'{{a_ha}}': {{a_ha}}}" {:a_ha "foo"}))))
   (testing "dots in var names"
     (is (= "This is useful is it not"
-           (sut/expand-template "This is {{quite.wack}} is it not"
+           (expand-template "This is {{quite.wack}} is it not"
                             {:quite {:wack "useful"}}))))
+  (testing "dots with numbers in var names"
+    (is (= "This is useful is it not"
+           (expand-template "This is {{quite.0}} is it not"
+                            {:quite ["useful" "expensive"]}))))
+  (testing "Missing param errors"
+    (is (thrown? Exception
+                 (expand-template "{{foo}} {{bar}} and baz" {:foo 23}))) )
   ;; TODO test :keyword=fn arg
   )
 
@@ -507,10 +515,6 @@ WHERE {{time-filter-clause}}
       (is (= (nth result 1) (nth result 3))))
     (testing "gen d values are unique"
       (is (not (= (nth result 3) (nth result 5)))))))
-
-(deftest pam-test
-  (is (= (map #(* % 2) (range 10))
-         (sut/pam (range 10) #(* % 2)))))
 
 (deftest clean-seq-test
   (is (= '(3 4 [a] "hey")
