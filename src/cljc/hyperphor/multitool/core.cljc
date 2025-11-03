@@ -371,6 +371,22 @@
       res
       (apply expand-template-recur res args))))
 
+
+(macros/deftime
+
+;;; Macro form TODO maybe also allow param map
+(defmacro tx
+  "Expand a template based on lexically defined variables"
+  [template]
+  (let [params (map second (re-seq default-param-regex template))
+        param-map (into {} (map (fn [p] [(keyword p) 
+                                         (symbol p)])
+                                params))]
+  `(expand-template ~template ~param-map)))
+
+)
+
+
 ;;; Stolen from clj-glob, where it is internal 
 (defn glob->regex
   "Takes a glob-format string and returns an equivalent regex."

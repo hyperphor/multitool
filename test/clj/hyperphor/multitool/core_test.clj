@@ -270,6 +270,15 @@ WHERE {{time-filter-clause}}
              (expand {:start-date "2024-02-02"})))
       )))
 
+(deftest tx-macro-test
+  (let [foo 23 bar "nameless dread"]
+    (is (= "The number 23 inspires nameless dread)"
+           (tx "The number {{foo}} inspires {{bar}})")))
+    (is (thrown? Exception
+                 (eval
+                  (macroexpand
+                   '(tx "Nobody knows the true name of {{dobbs}})")))))))
+
 
 (deftest pattern-match-test
   (testing "basics"
