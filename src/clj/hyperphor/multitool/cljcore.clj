@@ -141,11 +141,17 @@
     (file-delete-recursively fname)))
 
 ;;; http://stackoverflow.com/questions/840190/changing-the-current-working-directory-in-java
-(defn cd "As in Unix shell cd"
+(defn cd
+  "As in Unix shell cd"
   [^String dirname]
   (let [dir (.getAbsoluteFile (File. dirname))]
     (System/setProperty "user.dir" (.getAbsolutePath dir))
     dir))
+
+(defn wd
+  "As in Unix shell pwd"
+  []
+  (System/getenv "PWD"))
 
 ;;; TODO these should take an argument for path
 

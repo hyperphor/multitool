@@ -1,6 +1,41 @@
-(ns hyperphor.multitool.math)
+(ns hyperphor.multitool.math
+  (:require [hyperphor.multitool.core :as u]))
 
 ;;; See clojure.math.combinatorics, clojure.math.numeric-tower (gcd, lcm)
+
+;;; ⩇⩆⩇ Tensor/vector arithmetic  ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
+
+;;; See https://github.com/cguenthner/tensure or https://github.com/mikera/core.matrix for more industrial-strength versions
+(defn tensorize
+  "Vectorize but recursive, duh"
+  [f]
+  (letfn [(tensorized [& args]
+            (if-let [l (some #(and (sequential? %) (count %)) args)]
+              (let [vargs (map #(if (sequential? %) (vec %) %) args)] 
+                (assert (apply = (map count (filter vector? vargs))) "vectors must be same size")
+                (mapv (fn [i]
+                        (apply tensorized (map (fn [arg] (if (vector? arg) (get arg i) arg)) vargs)))
+                      (range l)))
+              (apply f args))
+            )] 
+    tensorized))
+
+;;; TODO (T fn) should work, use memoization. 
+
+;; Basic
+(def +T (tensorize +))
+(def *T (tensorize *))
+(def -T (tensorize -))
+(def divT (tensorize /))
+(def powT (tensorize Math/pow))
+
+;; Slightly less basic
+(def divxT (tensorize (fn [a b] (if (zero? b) nil (/ a b)))))
+(def squareT (tensorize (fn [x] (Math/pow x 2))))
+(def absT Math/abs)
+(def diffT (tensorize (fn [a b] (Math/abs (- a b)))))
+
+
 
 ;;; ⩇⩆⩇ Scaling and interpolation ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
@@ -9,11 +44,12 @@
   [a b s]
   (+ (* a (- 1 s)) (* b s)))
 
+(def interpolateT (tensorize interpolate))
+
 (defn interpolated
   "Return a sequence of n equally-spaced numbers between a and b"
   [a b n]
-  (map #(interpolate a b (/ % (float (- n 1))))
-       (range n)))
+  (interpolateT a b (divT (range n) (float (dec n)))))
 
 (defn rescale
   "Val is a number from interval [from-lower, from-upper], scale it to [to-lower, to-upper]"
@@ -80,18 +116,14 @@
   ([x0 y0 x1 y1]
    (euclidean-distance [x0 y0] [x1 y1]))
   ([p0 p1]
-   (Math/sqrt (reduce + (map (fn [v0 v1]
-                              (Math/pow (- v0 v1) 2))
-                            p0 p1)))))
+   (Math/sqrt (reduce + (squareT (-T p0 p1))))))
 
 (defn manhattan-distance
   "Manhattan distance between points. Either 2D points supplied as separate arguments, or between 2 n-dimensional points with vector coordinates"
   ([x0 y0 x1 y1]
    (manhattan-distance [x0 y0] [x1 y1]))
   ([p0 p1]
-   (reduce + (map (fn [v0 v1]
-                   (Math/abs (- v0 v1)))
-                  p0 p1))))
+   (reduce + (diffT p0 p1))))
 
 (defn r2d
   "Convert radians to degrees"
@@ -125,13 +157,14 @@
              (nth sorted (dec (/ count 2)))])
       (nth sorted (/ (dec count) 2)))))
 
+
 (defn standard-deviation
   "Return standard deviation of the elements of `seq`"
   [seq]
   (let [mean0 (mean seq)]
     (Math/sqrt
-     (/ (reduce + (map #(Math/pow (- % mean0) 2) seq))
-        (- (count seq) 1)))))
+     (/ (reduce + (squareT (-T seq mean0)))
+        (count seq)))))
 
 ;;; https://en.wikipedia.org/wiki/Bessel%27s_correction
 (defn standard-deviation-sample
@@ -139,7 +172,7 @@
   [seq]
   (let [mean0 (mean seq)]
     (Math/sqrt
-     (/ (reduce + (map #(Math/pow (- % mean0) 2) seq))
+     (/ (reduce + (squareT (-T seq mean0)))
         (- (count seq) 1)))))
 
 (defn coefficent-of-variation
@@ -154,12 +187,21 @@
   (Math/pow (reduce * (map double seq))
             (/ 1 (count seq))))
 
+#_
 (defn covariance
   "Return the covariance between seq1 and seq2, which should be of equal size"  
   [seq1 seq2]
   (let [m1 (mean seq1)
         m2 (mean seq2)]
     (/ (reduce + (map #(* (- m1 %1) (- m2 %2)) seq1 seq2))
+       (- (count seq1) 1))))
+
+(defn covariance
+  "Return the covariance between seq1 and seq2, which should be of equal size"  
+  [seq1 seq2]
+  (let [m1 (mean seq1)
+        m2 (mean seq2)]
+    (/ (reduce + (*T (-T m1 seq1) (-T m2 seq2)))
        (- (count seq1) 1))))
 
 (defn pearson-correlation-coefficient

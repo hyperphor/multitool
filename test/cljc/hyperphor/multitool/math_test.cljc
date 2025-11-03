@@ -3,12 +3,27 @@
             #?(:clj [clojure.test :refer :all]
                :cljs [cljs.test :refer-macros [deftest is testing run-tests]])))
 
+(deftest tensorized-test
+  (testing "scalars"
+    (is (= 5 (sut/+T 2 3))))
+  (testing "vectors"
+    (is (= [4 6 8] (sut/+T [0 1 2] [4 5 6])))
+    (is (thrown? Error
+                 (sut/+T [0 1 2 3] [4 5 6]))))
+  (testing "mixed"
+    (is (= [3 4 5] (sut/+T [0 1 2] 3))))
+  (testing "higher ranks"
+    (is (= [[5 12] [21 32]]
+           (sut/*T [[1 2] [3 4]] [[5 6] [7 8]])))
+    (is (= [[10 20] [30 40]] (sut/*T '[[1 2] [3 4]] 10)))))
+
+
 (deftest interpolate-test
   (is (= 5.0 (sut/interpolate 0 10 0.5)))
   (is (= 1.0 (sut/interpolate 0 10 0.1))))
 
 (deftest interpolated-test
-  (is (= '(0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0)
+  (is (= [0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0]
          (sut/interpolated 0 10 11))))
 
 (deftest rescale-test

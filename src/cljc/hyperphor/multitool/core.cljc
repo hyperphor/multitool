@@ -19,8 +19,10 @@
 
 ;;; See https://github.com/clojure/core.memoize/ for more a elaborate memoization tool.
 
+
 (def memoizers (atom {}))
 
+;;; TODO it would be good to store the cache on the symbol metadata, but that seems hard.
 (defn memoize-named
   "Like clojure.core/memoize, but retains a ptr to the cache so it can be cleared (see memoize-reset)"
   [name f]
@@ -1584,8 +1586,7 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
           (recur (set/union done (set (list expanded)))
                  (concat new (rest fringe))))))))
 
-;;; Vectorized fns 
-
+;;; obso, use math/ternsorize
 (defn vectorize
   "Given a fn f with scalar args, (vectorized f) is a fn that takes either scalars or vectors for any argument,
   doing the appropriate vectorization. All vector args should be the same length."
@@ -1597,8 +1598,6 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
                 (apply f (map (fn [arg] (if (vector? arg) (get arg i) arg)) vargs)))
               (range l)))
       (apply f args))))
-
-;;; TODO vectorised functions (+*, -* etc) for all basic arith
 
 ;;; TODO branch for maps? (into {} (map...))
 (defn mapx
