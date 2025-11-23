@@ -33,7 +33,7 @@
 ;; Slightly less basic
 (def divxT (tensorize (fn [a b] (if (zero? b) nil (/ a b)))))
 (def squareT (tensorize (fn [x] (Math/pow x 2))))
-(def absT Math/abs)
+(def absT (tensorize Math/abs))
 (def diffT (tensorize (fn [a b] (Math/abs (- a b)))))
 
 
