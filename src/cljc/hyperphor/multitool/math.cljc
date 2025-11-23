@@ -7,7 +7,7 @@
 
 ;;; See https://github.com/cguenthner/tensure or https://github.com/mikera/core.matrix for more industrial-strength versions
 (defn tensorize
-  "Vectorize but recursive, duh"
+  "Generate a tensorized version of any f"
   [f]
   (letfn [(tensorized [& args]
             (if-let [l (some #(and (sequential? %) (count %)) args)]
@@ -20,7 +20,8 @@
             )] 
     tensorized))
 
-;;; TODO (T fn) should work, use memoization. 
+;;; Use this inline
+(def T (memoize tensorize))
 
 ;; Basic
 (def +T (tensorize +))

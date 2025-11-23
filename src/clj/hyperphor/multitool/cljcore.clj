@@ -201,6 +201,17 @@
      (io/copy (.openStream url) local-file)
      (str local-file))))
 
+(defn flatten-directory
+  [dir dest-dir]
+  (ensure-directory dest-dir)
+  (doseq [f (list-dir-recursive dir)]
+    (let [flat-name
+          (-> f
+              str
+              (subs (inc (count dir)))
+              (str/replace "/" " - "))]
+      (io/copy f (str dest-dir "/" flat-name))))) ;TODO might not work, real version uses fs/copy
+
 ;;; Note: incorrect for ~fred/blah paths, but I can't think of a reecent occasion of use for that.
 (defn expand-homedir
   [path]
@@ -291,8 +302,13 @@
 
 ;;; ⩇⩆⩇ Output ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
+;;; TODO should be a cljs version, duh
 (defn humanize-number [n]
-  (cond (>= n 1e9)
+  (cond (>= n 1e15)
+        (format "%1.3gP" (/ n 1e15))
+        (>= n 1e12)
+        (format "%1.3gT" (/ n 1e12))
+        (>= n 1e9)
         (format "%1.3gG" (/ n 1e9))
         (>= n 1e6)
         (format "%1.3gM" (/ n 1e6))

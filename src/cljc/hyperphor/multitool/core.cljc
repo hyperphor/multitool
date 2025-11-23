@@ -333,6 +333,29 @@
         #(get-in % access))
       (keyword s))))
 
+(declare some-thing)
+(defn- get*
+  [from key]
+  (if (and (fn? key) (vector? from))
+    (some-thing key from)
+    (get from key)))
+
+;;; Really a shame you can't inline tests
+(comment
+  (get* [{:a 1 :b "foo"} {:a 2 :b "bar"}] #(= 2 (:a %) ) :b)
+  {:a 2, :b "bar"})
+
+
+(defn get-in*
+  "Like core/get-in but a key (selector) can be a predicate fn which will pick an element from a sequence "
+  [m ks]
+  (reduce get* m ks))
+
+(comment
+  (get-in* {:output [{:a 1 :b "foo"} {:a 2 :b "bar"}]} [:output #(= 2 (:a %) ) :b])
+  "bar")
+
+
 ;;; TODO macro version of this than can do the Python thing of embedding code eg "You have {{(count items)}} items". 
 ;;; :param-regex param-regex-javascript-templating for compatibility with javascript templating ${foo}
 ;;; Variables can contain word characters, - or_. A . indicates subfields.
@@ -1017,6 +1040,16 @@
   "Map f over the keys of hashmap"
   [f hashmap]
   (reduce-kv (fn [acc k v] (assoc acc (f k) v)) {} hashmap))
+
+;;; This will also map keys, which is probably not the desired behavior
+(defn map-terminals
+  "Map f over all terminal elements of hashmap"
+  [f hashmap]
+  (walk/postwalk
+   #(cond (coll? %) %
+          :else (f %))
+   hashmap))
+
 
 ;;; Note: kind of useless, needs to walk vectors as well for the common use case (keywordification)
 (defn map-keys-recursive
