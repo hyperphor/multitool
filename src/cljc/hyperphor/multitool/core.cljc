@@ -620,15 +620,30 @@
           (= (second tail) elt) (first tail)
         :else (recur (rest tail)))))
 
-;;; TODO insert-berfore
 (defn insert-after
+  "Insert `elt` after `after` in `seq`. Throw exception if elt is not present."
   [seq elt after]
   (loop [tail seq
          new []]
-    (cond (empty? tail) (conj new elt)
+    (cond (empty? tail) (throw (ex-info "Element not found" {:elt after :seq seq}))
           (= (first tail) after) (concat (conj (conj new (first tail)) elt) (rest tail))
           :else (recur (rest tail)
                        (conj new (first tail))))))
+
+(defn insert-before
+  "Insert `elt` before `before` in `seq`. Throw exception if elt is not present."
+  [seq elt before]
+  (loop [tail seq
+         new []]
+    (cond (empty? tail)
+          (throw (ex-info "Element not found" {:elt before :seq seq}))
+          (= (first tail) before)
+          (concat new
+                  (cons elt tail))
+          :else (recur (rest tail)
+                       (conj new (first tail))))))
+
+
 
 ;;; Convention: <f>= names a fn that is like fn but takes an element to test for equality in place of a predicate.
 (defn remove= 

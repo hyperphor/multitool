@@ -4273,3 +4273,22 @@ WHERE {{time-filter-clause}}
   (is (= #{:bar} (set-toggle nil :bar))))
 
 
+(deftest insert-after-test
+  (is (= '(0 1 2 foo 3 4 5 6 7 8 9)
+         (insert-after (range 10) 'foo 2)))
+  (is (= '(0 1 2 3 4 5 6 7 8 9 foo)
+         (insert-after (range 10) 'foo 9)))
+  (is (thrown? Exception
+               (insert-after (range 10) 'foo 10))))
+
+(deftest insert-before-test
+  (is (= '(0 1 foo 2 3 4 5 6 7 8 9)
+         (insert-before (range 10) 'foo 2)))
+  (is (= '(0 1 2 3 4 5 6 7 8 foo 9)
+         (insert-before (range 10) 'foo 9)))
+  (is (= '(foo 0 1 2 3 4 5 6 7 8 9)
+         (insert-before (range 10) 'foo 0)))
+  (is (thrown? Exception
+               (insert-before (range 10) 'foo 10))))
+  
+  
