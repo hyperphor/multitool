@@ -486,6 +486,11 @@
 
 ;;; ⩇⩆⩇ Processes ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
+;;; Same as core/future
+(defmacro in-background
+  [& body]
+  `(future-call (fn [] ~@body)))
+
 (defn start-periodic-process!
   "Start a background process to execute thunk f every t mssc"
   [t f]

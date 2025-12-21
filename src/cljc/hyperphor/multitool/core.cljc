@@ -336,25 +336,14 @@
 (declare some-thing)
 (defn- get*
   [from key]
-  (if (and (fn? key) (vector? from))
+  (if (and (fn? key) (sequential? from))
     (some-thing key from)
     (get from key)))
 
-;;; Really a shame you can't inline tests
-(comment
-  (get* [{:a 1 :b "foo"} {:a 2 :b "bar"}] #(= 2 (:a %) ) :b)
-  {:a 2, :b "bar"})
-
-
 (defn get-in*
-  "Like core/get-in but a key (selector) can be a predicate fn which will pick an element from a sequence "
+  "Like core/get-in but a key (selector) can be a predicate fn which will pick an element from a sequence."
   [m ks]
   (reduce get* m ks))
-
-(comment
-  (get-in* {:output [{:a 1 :b "foo"} {:a 2 :b "bar"}]} [:output #(= 2 (:a %) ) :b])
-  "bar")
-
 
 ;;; TODO macro version of this than can do the Python thing of embedding code eg "You have {{(count items)}} items". 
 ;;; :param-regex param-regex-javascript-templating for compatibility with javascript templating ${foo}
@@ -1670,20 +1659,7 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
     (mapv f seq)
     (map f seq)))
 
-  ;; takes singleton and returns a vector in all cases
-(defn get*
-  [thing key]
-  (cond (= :* key) thing                                 ;huh
-        (= :m* key) (into [] thing)
-        :else [(get thing key)]))
-
-(defn get-in*
-  [thing keyseq]
-  (if (empty? keyseq)
-    [thing]
-    (mapcat (fn [elt] (get-in* elt (rest keyseq))) 
-            (get* thing (first keyseq)))))
-
+;;; TODO use mapv/vector if its a vector. Also, in core.matrix
 (defn transpose
   [matrix]
   (apply map list matrix))
