@@ -609,6 +609,10 @@
           (= (second tail) elt) (first tail)
         :else (recur (rest tail)))))
 
+(defn middle-elt
+  [seq]
+  (nth seq (/ (count seq) 2)))
+
 (defn insert-after
   "Insert `elt` after `after` in `seq`. Throw exception if elt is not present."
   [seq elt after]
@@ -836,6 +840,7 @@
 
 ;;; TODO these want a version that can accept an alternate for >* or compare
 ;;; Note: (apply clojure.core/max-key seq) is similar
+;;; Note: if multiple max values exist, the last is chosen
 (defn max-by "Find the maximum element of `seq` based on keyfn"
   [keyfn seq]
   (when-not (empty? seq)
@@ -1611,13 +1616,21 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
 
 (defn safely
   "Given f, produce new function that permits nulling."
-  [f]
-  (fn [x] (and x (f x))))
+  ([f]
+   (fn [x] (and x (f x))))
+  ([f default]
+   (fn [x] (if x (f x) default))))
+
+;;; Useful for count maps
+(def safe-inc (safely inc 1))
 
 (defn saferly
   "Given f, produce new function that will return nils if exception is thrown. Not recommended for production code"
-  [f]
-  (fn [& x] (ignore-errors (apply f x))))
+  ([f]
+   (fn [& x] (ignore-errors (apply f x))))
+  ([f default]
+   (fn [& x] (or (try (apply f x) (catch #?(:clj Throwable :cljs js/Error)
+                                      e default))))))
 
 ;;; TODO New, needs a better name
 (defn safestly

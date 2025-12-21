@@ -28,14 +28,13 @@
 (def *T (tensorize *))
 (def -T (tensorize -))
 (def divT (tensorize /))
-(def powT (tensorize Math/pow))
+(def powT (tensorize Math/pow))         ;This weirdly doesn't work in some contexts
 
 ;; Slightly less basic
 (def divxT (tensorize (fn [a b] (if (zero? b) nil (/ a b)))))
 (def squareT (tensorize (fn [x] (Math/pow x 2))))
 (def absT (tensorize Math/abs))
 (def diffT (tensorize (fn [a b] (Math/abs (- a b)))))
-
 
 
 ;;; ⩇⩆⩇ Scaling and interpolation ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
@@ -85,6 +84,11 @@
 (defn divides?
   [a b]
   (= 0 (rem a b)))
+
+(defn divisors
+  [n]
+  (filter (partial divides? n)
+          (range 2 (Math/ceil (/ (inc n) 2)))))
 
 (defn prime?
   [n]
@@ -235,3 +239,9 @@
   (map first (partition (/ (count seq) n) (sort seq))))
     
 
+;;; ⩇⩆⩇ Misc ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
+
+;;; Goes up to 10^18 TODO cljs version
+(defn pow10
+  [i]
+  (long (Math/pow 10 i)))

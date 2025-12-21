@@ -19,7 +19,9 @@
   (testing "T"
     (is (= 5 ((sut/T +) 2 3)))
     (is (= [[6 7] [14 15]]
-           ((sut/T +) [[2 3] [9 10]] [4 5])))))
+           ((sut/T +) [[2 3] [9 10]] [4 5]))))
+  (testing "powT"
+    (is (= [1.0 4.0 9.0] (sut/powT [1 2 3] 2)))))
 
 
 (deftest interpolate-test
@@ -56,4 +58,6 @@
 (deftest mean-test
   (is (= 5 (sut/mean (range 11)))))
 
-
+(deftest divisors-test
+  (is (= '(2 4 5 10 20 25 50)
+         (sut/divisors 100))))
