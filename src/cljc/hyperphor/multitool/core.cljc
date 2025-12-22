@@ -1653,6 +1653,7 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
                  (concat new (rest fringe))))))))
 
 ;;; obso, use math/ternsorize
+#_
 (defn vectorize
   "Given a fn f with scalar args, (vectorized f) is a fn that takes either scalars or vectors for any argument,
   doing the appropriate vectorization. All vector args should be the same length."

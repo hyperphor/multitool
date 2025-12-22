@@ -16,10 +16,16 @@ This has managed to avoid having (almost) any dependencies except for Clojure it
 
 https://github.com/weavejester/medley
 
+# Development
+
+Clojurescript repl    	 
+    lein trampoline cljsbuild repl-listen
+
+
 # Testing
 
-    lein test    # clj tests
-    lein doo    # cljs tests
+    lein test                   # clj tests
+    lein doo node test once     # cljs tests
 
 # To deploy to Clojars
 
