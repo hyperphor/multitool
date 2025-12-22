@@ -13,6 +13,12 @@
 #?(:cljs
    (def Exception :default))
 
+
+;;; → test utils
+(defn throw-up
+  []
+  (throw (ex-info "thrown up" {})))
+
 (deftest truncate-string-test
   (is (= "foo" (sut/truncate-string "foo" 3)))
   (is (= "fo…" (sut/truncate-string "foo" 2)))
@@ -331,12 +337,18 @@ WHERE {{time-filter-clause}}
   (testing "normal"
     (is (= 7 (ignore-errors (+ 3 4)))))
   (testing "error"
-    (is (= nil (ignore-errors (/ 0 0) (+ 3 4))))))
+    (is (= nil (ignore-errors (throw-up))))))
 
 (deftest error-handling-fn-test
-  (let [ed (sut/error-handling-fn /)]
-    (is (= [true 2] (ed 4 2)))
-    (is (= false (first (ed 2 0))))
+  #?(:clj                               ; /0 isn't an error in cljs!
+     (let [ed (sut/error-handling-fn /)]
+       (is (= [true 2] (ed 4 2)))
+       (is (= false (first (ed 2 0))))
+       (is (instance? #?(:clj Exception :cljs js/Error) (second (ed 2 0))))
+       ))
+  (let [ed (sut/error-handling-fn name)]
+    (is (= [true "ho"] (ed :ho)))
+    (is (= false (first (ed 3))))
     (is (instance? #?(:clj Exception :cljs js/Error) (second (ed 2 0))))
     ))
 
@@ -367,10 +379,12 @@ WHERE {{time-filter-clause}}
            "goof" "barf"}
           "I like food and goofing on woo."))))
 
+#?(:clj 
 (deftest re-substitute-test
   ;; Italicize all words that contain "oo"
   (is (= '("I like " [:i "food"] " and " [:i "goofing"] " on " [:i "woo"] ".")
          (sut/re-substitute #"\w*oo\w*" "I like food and goofing on woo." (fn [ss] [:i ss])))))
+   )
 
 (deftest dehumanize-test
   (let [m {"This" 1 "Uses strings" 2 "As keys" {"which is" "weird"}}]
@@ -577,19 +591,21 @@ WHERE {{time-filter-clause}}
 
 (deftest stratify-test
   (let [results
-        (sut/stratify '{1 {:name a :predecessors []}
-                    2 {:name b :predecessors [1]}
-                    3 {:name c :predecessors [1]}
-                    4 {:name d :predecessors [1 3]}
-                    }
-                  :predecessors :depth)]
+        (sut/stratify
+         '{1 {:name a :predecessors []}
+           2 {:name b :predecessors [1]}
+           3 {:name c :predecessors [1]}
+           4 {:name d :predecessors [1 3]}
+           }
+         :predecessors :depth)]
     (is (= {1 0 2 1 3 1 4 2} (sut/map-values :depth results))))
   (testing "consistency check"
-    (is (thrown? AssertionError
-                 (sut/stratify  '{1 {:name a :predecessors []}
-                              2 {:name b :predecessors [foo]}
-                              3 {:name c :predecessors [1]}}
-                            :predecessors :depth)))))
+    (is (thrown? #?(:clj Error :cljs js/Error)
+                 (sut/stratify
+                  '{1 {:name a :predecessors []}
+                    2 {:name b :predecessors [foo]}
+                    3 {:name c :predecessors [1]}}
+                  :predecessors :depth)))))
 
 (deftest self-label-test
   (is (= '{1 {:name a :id 1}
@@ -641,7 +657,7 @@ WHERE {{time-filter-clause}}
   (is (sut/nullish? false))
   (testing "or-nullish"
     (is (= 2 (sut/or-nullish "" 2)))
-    (is (= 2 (sut/or-nullish "" 2 (/ 0 0))))
+    (is (= 2 (sut/or-nullish "" 2 (throw-up))))
     ))
 
 (deftest set-toggle-test
