@@ -24,8 +24,8 @@ Clojurescript repl
 
 # Testing
 
-    lein test                   # clj tests
-    lein doo node test once     # cljs tests
+    lein test         # clj tests
+    lein doo once     # cljs tests
 
 # To deploy to Clojars
 
