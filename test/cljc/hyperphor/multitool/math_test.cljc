@@ -3,12 +3,19 @@
             #?(:clj [clojure.test :refer :all]
                :cljs [cljs.test :refer-macros [deftest is testing run-tests]])))
 
+#?(:cljs
+   (def Error :default))
+#?(:cljs
+   (def Exception :default))
+
+
 (deftest tensorize-test
+
   (testing "scalars"
     (is (= 5 (sut/+T 2 3))))
   (testing "vectors"
     (is (= [4 6 8] (sut/+T [0 1 2] [4 5 6])))
-    (is (thrown? Error
+    (is (thrown? #?(:clj Error :cljs js/Error)
                  (sut/+T [0 1 2 3] [4 5 6]))))
   (testing "mixed"
     (is (= [3 4 5] (sut/+T [0 1 2] 3))))

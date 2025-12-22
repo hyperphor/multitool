@@ -1,4 +1,4 @@
-(defproject com.hyperphor/multitool "0.2.2"
+(defproject com.hyperphor/multitool "0.2.3"
   :description "Hyperphor utility library"
   :url "https://github.com/Hyperphor/multitool"
   :license {:name "Apache 2 License"
@@ -16,11 +16,12 @@
   {:builds [{:id "test"
              :source-paths ["src" "test/cljs" "test/cljc"]
              :compiler {:output-to "target/testable.js"
+                        :target :nodejs
                         :optimizations :none
                         :main hyperphor.multitool.runner
                         :pretty-print true}}]}
   :doo {:build "test"
-        :alias {:default [:planck]}}
+        :alias {:default [:node]}}
   :codox {:output-path "docs"
           :metadata {:doc/format :markdown}
           :source-uri "http://github.com/Hyperphor/multitool/blob/master/{filepath}#L{line}"}

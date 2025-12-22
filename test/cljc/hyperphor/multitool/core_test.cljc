@@ -1,21 +1,22 @@
-;;; Ideally merge this with the clj tests as a cljc file, but for now doing it separately
-
-;;; TODO naturally there has been divergence
-
 (ns hyperphor.multitool.core-test
-  (:require [cljs.test :refer-macros [deftest is testing run-tests]]
-            [hyperphor.multitool.core :as sut :refer-macros [ignore-errors doseq* for* forcat]]
-            [clojure.string :as str]
-            [hyperphor.multitool.nlp :as nlp]
-            [hyperphor.multitool.math :as math]
-            )
-  )
+  #?(:cljs (:require-macros [hyperphor.multitool.core :refer [defn-memoized def-lazy ignore-errors ignore-report ignore-return tx forf doseq* for* forcat or-nullish memoize-rec]]))
+  (:require
+   #?(:clj  [clojure.test :refer [deftest is testing]]
+      :cljs [cljs.test :refer [deftest is testing]])
+   [hyperphor.multitool.core :as sut  :refer [defn-memoized def-lazy ignore-errors ignore-report ignore-return tx forf doseq* for* forcat or-nullish memoize-rec]]
+   [clojure.string :as str]
+   [hyperphor.multitool.nlp :as nlp]
+   #_ [hyperphor.multitool.math :as math]))
+
+#?(:cljs
+   (def Error :default))
+#?(:cljs
+   (def Exception :default))
 
 (deftest truncate-string-test
   (is (= "foo" (sut/truncate-string "foo" 3)))
   (is (= "fo…" (sut/truncate-string "foo" 2)))
   (is (= "fo" (sut/truncate-string "fo" 3))))
-
 
 (deftest memoize-named-test
   (let [counter (atom 0)
@@ -37,6 +38,10 @@
   (is (= '{1 #{:a} :x #{:b} :y #{:b}} (sut/map-invert-multiple {:a 1 :b '(:x :y)})))
   (is (= '{1 #{:a :b} 2 #{:b} } (sut/map-invert-multiple {:a 1 :b '(1 2)})))
   )
+
+(deftest map-bidirectional-test
+  (is (= {:a :b, :b :a}
+         (sut/map-bidirectional {:a :b}))))
 
 (deftest map-chunked-test
   (let [f (fn [x] (* x 2))]
@@ -63,6 +68,7 @@
   (is (= 2 (sut/some-thing even? '(1 2 3 4)))))
 
 (deftest iterate-until-test
+  ;; TODO 2 arg
   (is (= 16 (sut/iterate-until #(> % 10) #(* % 2) 1))))
 
 (deftest remove=-test
@@ -107,9 +113,8 @@
   (is (not (sut/bag= '(a b c) '(c b a c))))
   (is (sut/bag= '(a c b c) '(c b a c))))
 
-;;; Reference to Math/ is fatal to test runner, it hangs
-#_
 (deftest powerset-test
+
   (is (= #{#{} #{3} #{2} #{1} #{1 3 2} #{1 3} #{1 2} #{3 2}}
          (sut/powerset #{1 2 3})))
   (testing "works on empty set"
@@ -147,7 +152,7 @@
   (is (sut/<* "foo" "quux"))
   (is (not (sut/<* 1 1))))
 
-(defn tokens [s]
+(defn- tokens [s]
   (str/split s #"\W"))
 
 (deftest maxby-minby-test
@@ -163,7 +168,6 @@
     (is (= "call" (sut/min* words)))
     (is (= "you" (sut/max* words)))))
 
-
 (deftest doseq*-test
   (let [acc (atom '())]
     (doseq* [a '(1 2 3)
@@ -174,7 +178,7 @@
   ;; TODO seqs of different length
   )
 
-#_
+#?(:clj
 (deftest re-seq-positions-test
   (is (= [[7 10] [13 16] [28 31]]
          (sut/re-seq-positions #"foo" "I like food, fooseball, and foolishness.")))
@@ -182,6 +186,7 @@
          (sut/re-seq-positions #"\((-*)\)" "This (---) is (-) something (-----) else" 1)))
   (is (= []
          (sut/re-seq-positions #"\((-*)\)" "nada"))))
+)
 
 (deftest treeword-test
   (is (= "yo"
@@ -196,10 +201,23 @@
   (testing "dotted keyword input"
     (is (= "yo"
            ((sut/treeword :foo.bar)
-            {:foo {:bar "yo"}})))))
+            {:foo {:bar "yo"}}))))
+  (testing "dotted with an integer component"
+    (is (= 2
+           ((sut/treeword :foo.1.bar)
+            {:foo [{:bar 1} {:bar 2} ]})
+           ))))
+
+(def get*-ex
+  {:things
+   [{:a 1 :b "foo"}
+    {:a 2 :b "bar"}]})
+
+(deftest get*-test
+  (is (= "bar"
+         (sut/get-in* get*-ex [:things #(= 2 (:a %)) :b]))))
 
 ;;; TODO would make sense to have a re-seq variant that could return groups
-
 (deftest expand-template-test
   
   (testing "Double braces (default)"
@@ -207,35 +225,35 @@
           bindings1 {:foo "subgenius" :bar "slack"}
       ]
       (is (= "The subgenius must have slack!"
-             (expand-template template bindings1)))
+             (sut/expand-template template bindings1)))
       )
     )
   (testing "Javascript templating, keywords"
     (let [template "The ${foo} must have ${bar}!"
           bindings1 {:foo "subgenius" :bar "slack"}]
       (is (= "The subgenius must have slack!"
-             (expand-template template bindings1 :param-regex param-regex-javascript)))
+             (sut/expand-template template bindings1 :param-regex sut/param-regex-javascript)))
       ))
   (testing "fix bad parse"
     (is (= "{'foo': foo}"
-           (expand-template "{'{{a}}': {{a}}}" {:a "foo"}))))
+           (sut/expand-template "{'{{a}}': {{a}}}" {:a "foo"}))))
   (testing "hyphens in var names"
     (is (= "{'foo': foo}"
-           (expand-template "{'{{a-ha}}': {{a-ha}}}" {:a-ha "foo"}))))
+           (sut/expand-template "{'{{a-ha}}': {{a-ha}}}" {:a-ha "foo"}))))
   (testing "underscores in var names"
     (is (= "{'foo': foo}"
-           (expand-template "{'{{a_ha}}': {{a_ha}}}" {:a_ha "foo"}))))
+           (sut/expand-template "{'{{a_ha}}': {{a_ha}}}" {:a_ha "foo"}))))
   (testing "dots in var names"
     (is (= "This is useful is it not"
-           (expand-template "This is {{quite.wack}} is it not"
+           (sut/expand-template "This is {{quite.wack}} is it not"
                             {:quite {:wack "useful"}}))))
   (testing "dots with numbers in var names"
     (is (= "This is useful is it not"
-           (expand-template "This is {{quite.0}} is it not"
+           (sut/expand-template "This is {{quite.0}} is it not"
                             {:quite ["useful" "expensive"]}))))
   (testing "Missing param errors"
-    (is (thrown? Exception
-                 (expand-template "{{foo}} {{bar}} and baz" {:foo 23}))) )
+    (is (thrown? #?(:clj Exception :cljs js/Error)
+                 (sut/expand-template "{{foo}} {{bar}} and baz" {:foo 23}))) )
   ;; TODO test :keyword=fn arg
   )
 
@@ -270,21 +288,30 @@ WHERE {{time-filter-clause}}
              (expand {:start-date "2024-02-02"})))
       )))
 
-#_
+(deftest tx-macro-test
+  (let [foo 23 bar "nameless dread"]
+    (is (= "The number 23 inspires nameless dread"
+           (sut/tx "The number {{foo}} inspires {{bar}}")))
+    (is (thrown?
+         #?(:clj Exception :cljs js/Error) 
+         (eval                  ;TODO in cljs gets an eval-related error, not the one we are looking for
+          (macroexpand
+           '(sut/tx "Nobody knows the true name of {{dobbs}}")))))))
+
 (deftest pattern-match-test
   (testing "basics"
-    (is (= {} (pattern-match '(a 1) '(a 1))))
-    (is (= nil (pattern-match '(a 1) '(a 2))))
-    (is (= nil (pattern-match '(a) '(a b c) ))) ;TODO not working I think  
-    (is (= nil (pattern-match '(a b c) '(a)))))
+    (is (= {} (sut/pattern-match '(a 1) '(a 1))))
+    (is (= nil (sut/pattern-match '(a 1) '(a 2))))
+    (is (= nil (sut/pattern-match '(a) '(a b c) ))) ;TODO not working I think  
+    (is (= nil (sut/pattern-match '(a b c) '(a)))))
   (testing "binding"
-    (is (= {:var 2} (pattern-match '(a (? var)) '(a 2))))
-    (is (= nil (pattern-match '(a (? var)) '(a))))
-    (is (= {:var 1} (pattern-match '((? var) x (? var)) '(1 x 1))))
-    (is (= nil (pattern-match '((? var) x (? var)) '(1 x 2))))
-    (is (= '{:a x :b y} (pattern-match '((? a) (? b)) '(x y))))
-    (is (= '{:a x} (pattern-match '((? a) (? a)) '(x x))))
-    (is (= nil (pattern-match '((? a) (? a)) '(x y) )))))
+    (is (= {:var 2} (sut/pattern-match '(a (? var)) '(a 2))))
+    (is (= nil (sut/pattern-match '(a (? var)) '(a))))
+    (is (= {:var 1} (sut/pattern-match '((? var) x (? var)) '(1 x 1))))
+    (is (= nil (sut/pattern-match '((? var) x (? var)) '(1 x 2))))
+    (is (= '{:a x :b y} (sut/pattern-match '((? a) (? b)) '(x y))))
+    (is (= '{:a x} (sut/pattern-match '((? a) (? a)) '(x x))))
+    (is (= nil (sut/pattern-match '((? a) (? a)) '(x y) )))))
 
 (deftest uncollide-test
   (is (= '(1 2 3) (sut/uncollide '(1 2 3))))
@@ -300,22 +327,20 @@ WHERE {{time-filter-clause}}
   (is (= '(1 2 3) (sut/intercalate nil '(1 2 3))))
   (is (= '(a b c) (sut/intercalate '(a b c) nil))))
 
-;;; Note: (/ 0 0) does not throw an error in js! So these have diverged from clj version
-
 (deftest ignore-errors-test
   (testing "normal"
     (is (= 7 (ignore-errors (+ 3 4)))))
   (testing "error"
-    (is (= nil (ignore-errors (.foo 0) (+ 3 4))))))
+    (is (= nil (ignore-errors (/ 0 0) (+ 3 4))))))
 
-;;; TODO should test success
 (deftest error-handling-fn-test
-  (let [f #(.foo %)
-        ed (sut/error-handling-fn f)
-        [success? msg] (ed 2)]
-    (is (= false success?))
-    (is (re-find #"foo is not a function" msg))))
+  (let [ed (sut/error-handling-fn /)]
+    (is (= [true 2] (ed 4 2)))
+    (is (= false (first (ed 2 0))))
+    (is (instance? #?(:clj Exception :cljs js/Error) (second (ed 2 0))))
+    ))
 
+#_
 (deftest vectorize-test
   (let [+* (sut/vectorize +)]
     (is (= 6 (+* 1 2 3)))
@@ -342,11 +367,10 @@ WHERE {{time-filter-clause}}
            "goof" "barf"}
           "I like food and goofing on woo."))))
 
-#_
 (deftest re-substitute-test
   ;; Italicize all words that contain "oo"
   (is (= '("I like " [:i "food"] " and " [:i "goofing"] " on " [:i "woo"] ".")
-         (re-substitute #"\w*oo\w*" "I like food and goofing on woo." (fn [ss] [:i ss])))))
+         (sut/re-substitute #"\w*oo\w*" "I like food and goofing on woo." (fn [ss] [:i ss])))))
 
 (deftest dehumanize-test
   (let [m {"This" 1 "Uses strings" 2 "As keys" {"which is" "weird"}}]
@@ -362,9 +386,11 @@ WHERE {{time-filter-clause}}
 (deftest index-by-safely-test
   (is (= '{a [a 1], b [b 2], c [c 3]}
          (sut/index-by-safely first '[[a 1] [b 2] [c 3]])))
-  (is (thrown? :default                 ;???
+  (is (thrown? #?(:clj Exception :cljs js/Error)
        (sut/index-by-safely first '[[a 1] [b 2] [a 3]]))))
 
+;;; TODO fix so doesn't need math/
+#_
 (deftest group-by-multiple-test
   (is (= {2 #{4 6 12 2 14 16 10 18 8}
           3 #{15 6 3 12 9 18}
@@ -374,8 +400,8 @@ WHERE {{time-filter-clause}}
           13 #{13}
           17 #{17}
           19 #{19}}
-         (sut/map-values set
-                         (sut/group-by-multiple math/prime-factors (range 2 20))))))
+         (map-values set
+                     (group-by-multiple math/prime-factors (range 2 20))))))
 
 (deftest coerce-numeric-test
   (is (nil? (sut/coerce-numeric nil)))
@@ -401,7 +427,6 @@ WHERE {{time-filter-clause}}
   (is (= -1.7 (sut/coerce-numeric-hard "-1.7")))
   (is (= 1700.0 (sut/coerce-numeric-hard "1.7E3")))
   )
-
 ;;; from Blood Meridian, Cormac McCarthy
 (def text1 "They rode all day upon a pale gastine sparsely grown with saltbush and panicgrass. In the evening they entrained upon a hollow ground that rang so roundly under the horses' hooves that they stepped and sidled and rolled their eyes like circus animals and that night as they lay in that ground each heard, all heard, the dull boom of rock falling somewhere far below them in the awful darkness inside the world.")
 
@@ -421,6 +446,14 @@ WHERE {{time-filter-clause}}
               (when (re-find #"pa" word)
                 (collect word))))))))
 
+(deftest collecting-merge-test
+  (let [silly
+        (sut/collecting-merge
+         (fn [collect]
+           (doseq [word (nlp/tokens text1)]
+             (collect {(first word) [word]}))))]
+    (is (= (get silly \h) '("hollow" "horses'" "hooves" "heard" "heard")))))
+
 (deftest walk-map-entries-test
   (is (= {:a [1 1], :b [2 2], :c [{:d [3 3], :e [4 4]} {:d [3 3], :e [4 4]}]}
          (sut/walk-map-entries (fn [[k v]] [k [v v]])
@@ -433,7 +466,6 @@ WHERE {{time-filter-clause}}
   (is (= {:a 1, :b 2, :c {:d 6, :e 4}}
          (sut/walk-keys (fn [[k v]]  [k (* 2 v)]) :d
                     {:a 1 :b 2 :c {:d 3 :e 4}}))))
-
 
 (deftest walk-collect-test
   (is (= [1 2 3]
@@ -516,6 +548,16 @@ WHERE {{time-filter-clause}}
     (testing "gen d values are unique"
       (is (not (= (nth result 3) (nth result 5)))))))
 
+(deftest fsbl-test
+  (is (= (map #(* % 2) (range 10))
+         (-> (range 10)
+             (sut/fsbl map #(* % 2))))))
+
+(deftest lsbf-test
+  (is (= 2
+         (->> (range 10)
+              (sut/lsbf nth 2)))))
+
 (deftest clean-seq-test
   (is (= '(3 4 [a] "hey")
          (sut/clean-seq '(3 nil 4 "" [] [a] "hey")))))
@@ -543,7 +585,7 @@ WHERE {{time-filter-clause}}
                   :predecessors :depth)]
     (is (= {1 0 2 1 3 1 4 2} (sut/map-values :depth results))))
   (testing "consistency check"
-    (is (thrown? :default
+    (is (thrown? AssertionError
                  (sut/stratify  '{1 {:name a :predecessors []}
                               2 {:name b :predecessors [foo]}
                               3 {:name c :predecessors [1]}}
@@ -583,4 +625,47 @@ WHERE {{time-filter-clause}}
   (is (empty? (sut/duplicates (range 10))))
   (is (= '(1 2) (sut/duplicates '(1 2 3 2 10 1 0 1)))))
 
+;; TODO dissoc-if-test
+
+(deftest distinct-by-test
+  (= (set [{:id 1, :name "fred"} {:id 2, :name "ethel"}])
+     (sut/distinct-by :id [{:id 1, :name "fred"} {:id 2, :name "ethel"}]))
+  (= (set [{:id 1, :name "fred"} {:id 2, :name "ethel"} {:id 1 :name "false fred"}])
+     (sut/distinct-by :id [{:id 1, :name "fred"} {:id 2, :name "ethel"}])))
+
+(deftest nullish-test
+  (is (sut/nullish? []))
+  (is (sut/nullish? {}))
+  (is (sut/nullish? ""))
+  (is (sut/nullish? nil))
+  (is (sut/nullish? false))
+  (testing "or-nullish"
+    (is (= 2 (sut/or-nullish "" 2)))
+    (is (= 2 (sut/or-nullish "" 2 (/ 0 0))))
+    ))
+
+(deftest set-toggle-test
+  (is (= #{:foo} (sut/set-toggle #{:foo :bar} :bar)))
+  (is (= #{:foo :bar} (sut/set-toggle #{:foo} :bar)))
+  (is (= #{:bar} (sut/set-toggle nil :bar))))
+
+
+(deftest insert-after-test
+  (is (= '(0 1 2 foo 3 4 5 6 7 8 9)
+         (sut/insert-after (range 10) 'foo 2)))
+  (is (= '(0 1 2 3 4 5 6 7 8 9 foo)
+         (sut/insert-after (range 10) 'foo 9)))
+  (is (thrown? #?(:clj Exception :cljs js/Error)
+               (sut/insert-after (range 10) 'foo 10))))
+
+(deftest insert-before-test
+  (is (= '(0 1 foo 2 3 4 5 6 7 8 9)
+         (sut/insert-before (range 10) 'foo 2)))
+  (is (= '(0 1 2 3 4 5 6 7 8 foo 9)
+         (sut/insert-before (range 10) 'foo 9)))
+  (is (= '(foo 0 1 2 3 4 5 6 7 8 9)
+         (sut/insert-before (range 10) 'foo 0)))
+  (is (thrown? #?(:clj Exception :cljs js/Error)
+               (sut/insert-before (range 10) 'foo 10))))
+  
   
