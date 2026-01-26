@@ -96,9 +96,10 @@
     (not (some #(divides? n %)
                (take-while #(<= % max-f) primes)))))
 
-;;; An infinite sequence of factorials. Not that useful, it blows out at around 30.
+;;; An infinite sequence of factorials.
+;;; OK, I was today years old when I learned *' exists. Should use it more. 
 (def factorials
-  (map * (rest (range)) (cons 1 (lazy-seq factorials))))
+  (reductions *' 1 (rest (range))))
 
 (defn prime-factors
   "Prime factors of n"
