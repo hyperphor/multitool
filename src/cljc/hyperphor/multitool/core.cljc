@@ -1584,10 +1584,10 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   "Compute the powerset P(s) of a set"
   [s]
   (if (empty? s) #{#{}}
-      (let [elt (set (list (first s)))
-            tail (powerset (rest s))]
-        (set/union (into #{} (map #(set/union elt %) tail))
-                   tail))))
+      (let [[head & tail] s
+            base (powerset tail)]
+        (set (concat (map #(conj % head) base)
+                     base)))))
 
 ;;; ⩇⩆⩇ Functional ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
