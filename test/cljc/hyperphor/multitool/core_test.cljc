@@ -298,6 +298,8 @@ WHERE {{time-filter-clause}}
   (let [foo 23 bar "nameless dread"]
     (is (= "The number 23 inspires nameless dread"
            (sut/tx "The number {{foo}} inspires {{bar}}")))
+    (is (= "Twice 23 is 46"
+           (sut/tx "Twice {{foo}} is {{(* 2 foo)}}")))
     (is (thrown?
          #?(:clj Exception :cljs js/Error) 
          (eval                  ;TODO in cljs gets an eval-related error, not the one we are looking for

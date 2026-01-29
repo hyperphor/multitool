@@ -384,17 +384,20 @@
       (apply expand-template-recur res args))))
 
 
+(def tx-param-regex #"\{\{(.*?)\}\}")
+
 (macros/deftime
 
-;;; Macro form TODO maybe also allow param map
+;;; Macro for templating. Templates are strings in which {{<form>}} will be replaced by the value of evaling form (which can be a symbol or an xexpression)
+;;; TODO also allow param map
 (defmacro tx
   "Expand a template based on lexically defined variables"
   [template]
-  (let [params (map second (re-seq default-param-regex template))
+  (let [params (map second (re-seq tx-param-regex template))
         param-map (into {} (map (fn [p] [(keyword p) 
-                                         (symbol p)])
+                                         (read-string p)])
                                 params))]
-  `(expand-template ~template ~param-map)))
+    `(expand-template ~template ~param-map :param-regex tx-param-regex)))
 
 )
 
