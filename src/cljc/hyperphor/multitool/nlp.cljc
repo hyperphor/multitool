@@ -2,8 +2,12 @@
   (:require [clojure.string :as str]
             [hyperphor.multitool.core :as core]))
 
+;;; Goal: have soft-string-matching on tap. Maybe belongs more in voracious than multitool though.
+
 ;;; Source: http://rosettacode.org/wiki/Levenshtein_distance#Clojure
 ;;; can be extremely slow eg (levenshtein "restaurant" "restoration")
+;;; Or see clj-fuzzy or for performance, use a Java library. Apache Commons Text is the standard choice.
+
 (defn levenshtein [str1 str2]
   (let [len1 (count str1)
         len2 (count str2)]
@@ -15,6 +19,14 @@
                  (inc (levenshtein str1 (rest str2)))
                  (+ cost
                     (levenshtein (rest str1) (rest str2))))))))
+
+;;; Too slow to be really useful except on tiny sets
+(defn best-matches
+  [target candidates]
+  (->> candidates
+       (map (fn [c] {:candidate c
+                     :distance (levenshtein target c)}))
+       (sort-by :distance)))
 
 ;;; lowercase and tokenize a string. Punctuation is removed (except for ').
 ;;; \p{L} means match any char of any language.

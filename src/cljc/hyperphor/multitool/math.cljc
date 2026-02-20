@@ -102,7 +102,7 @@
   (reductions *' 1 (rest (range))))
 
 (defn prime-factors
-  "Prime factors of n"
+  "Prime factors of n. Can include duplicates"
   [n]
   (loop [nn n
          [prime & rest-primes :as primes] primes
@@ -114,6 +114,15 @@
           (cons nn acc)
           :else
           (recur nn rest-primes acc))))
+
+(defn factors [n]
+  "Find al; factors of n (including 1 and n)"
+  (->> (range 1 (inc (Math/sqrt n)))    ;Find small factors
+       (filter #(zero? (mod n %)))
+       (mapcat #(identity               ;Add inverses
+                 [% (/ n %)]))
+       distinct
+       sort))
 
 ;;; ⩇⩆⩇ Geometry ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 

@@ -1,4 +1,4 @@
-(defproject com.hyperphor/multitool "0.2.3"
+(defproject com.hyperphor/multitool "0.2.4"
   :description "Hyperphor utility library"
   :url "https://github.com/Hyperphor/multitool"
   :license {:name "Apache 2 License"
@@ -13,6 +13,10 @@
             [lein-codox "0.10.8"]
             [lein-doo "0.1.11"]]
   :jvm-opts ["--add-opens" "java.base/java.lang=ALL-UNNAMED"] ;necessary for codox to run
+
+  :profiles {:test {:dependencies [[org.clojure/clojurescript "1.12.42"]]}}
+
+
   :cljsbuild
   {:builds [{:id "test"
              :source-paths ["src" "test/cljs" "test/cljc"]

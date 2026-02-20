@@ -841,6 +841,10 @@
      (f seq) (cons seq (filter-rest f (rest seq)))
      :else (filter-rest f (rest seq)))))
 
+;;; TODO reduce*
+;;; A version of reduce that takes multiple seq args like map
+
+
 ;;; TODO these want a version that can accept an alternate for >* or compare
 ;;; Note: (apply clojure.core/max-key seq) is similar
 ;;; Note: if multiple max values exist, the last is chosen
@@ -1113,7 +1117,7 @@
     (zipmap keys coll)))
 
 ;;; TODO this is confusingly named; there are several kinds of multiple to deal with.
-;;; TODO Also no tests, and also should use transients
+;;; TODO also should use transients
 (defn index-by-multiple
   "Like index-by, but f produces a seq of values rather than a single one"
   [f coll]
@@ -1141,7 +1145,6 @@
   (zipmap (map f coll) (map g coll)))
 
 ;;; TODO use transients as in group-by
-;;; wait isn't this the same as index-by-multiple??? Argh.
 (defn group-by-multiple
   "Like group-by, but f produces a seq of values rather than a single one; the orginal value gets grouped with each of them"
   [f coll]  
@@ -1194,6 +1197,15 @@
 (defn map-bidirectional
   [map]
   (merge map (set/map-invert map)))
+
+(declare walk-map-entries)
+(defn swap-keys
+  [struct keys]
+  (let [remap (map-bidirectional keys)]
+    (walk-map-entries
+     (fn [[k v]]
+       [(get remap k k) v])
+     struct)))
 
 (defn map-invert-multiple
   "Returns the inverse of map with the vals mapped to the keys. Like set/map-invert, but does the sensible thing with multiple values.
@@ -1700,6 +1712,11 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
   "Return a random float within range of p"
   [p range]
   (rand-range (- p range) (+ p range)))
+
+(defn rand-around-int
+  "Return a random int in range of [-p, p]"
+  [p range]
+  (rand-range-int (- p range) (+ p range 1)))
 
 ;;; Note: in clojure.core as rand-nth
 (defn random-element

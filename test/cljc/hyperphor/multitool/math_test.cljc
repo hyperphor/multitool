@@ -58,6 +58,12 @@
       (let [j (rand-int 1000000)]
         (is (= j (apply * (sut/prime-factors j))))))))
 
+(deftest factors-test
+  (is (= '(1 3 9 27 37 111 333 999)
+         (sut/factors 999)))
+  (is (= '(1 23)
+         (sut/factors 23))))
+
 (deftest radian-degree-test
   (is (= 180.0 (sut/r2d Math/PI)))
   (is (= (/ Math/PI 2) (sut/d2r 90))))

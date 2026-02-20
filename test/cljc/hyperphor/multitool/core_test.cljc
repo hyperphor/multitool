@@ -1,23 +1,25 @@
 (ns hyperphor.multitool.core-test
   #?(:cljs (:require-macros [hyperphor.multitool.core :refer [defn-memoized def-lazy ignore-errors ignore-report ignore-return tx forf doseq* for* forcat or-nullish memoize-rec]]))
   (:require
-   #?(:clj  [clojure.test :refer [deftest is testing]]
+   #?(:clj  [clojure.test :refer [deftest is testing run-tests]]
       :cljs [cljs.test :refer [deftest is testing]])
    [hyperphor.multitool.core :as sut  :refer [defn-memoized def-lazy ignore-errors ignore-report ignore-return tx forf doseq* for* forcat or-nullish memoize-rec]]
    [clojure.string :as str]
-   [hyperphor.multitool.nlp :as nlp]
-   #_ [hyperphor.multitool.math :as math]))
-
-#?(:cljs
-   (def Error :default))
-#?(:cljs
-   (def Exception :default))
-
+   ))
 
 ;;; → test utils
 (defn throw-up
   []
   (throw (ex-info "thrown up" {})))
+
+;;; copied from nlp, avoid cross dependencies
+(defn tokens
+  [s]
+  (map str/lower-case 
+       (re-seq #?(:clj #"[\p{L}'\d]+"
+                  :cljs #"[\w\d']+")    ;TODO there's a better translation of \p{L} at https://stackoverflow.com/questions/280712/how-can-i-use-unicode-aware-regular-expressions-in-javascript but it is too big and ugly to use
+                  s)))
+
 
 (deftest truncate-string-test
   (is (= "foo" (sut/truncate-string "foo" 3)))
@@ -158,8 +160,14 @@
   (is (sut/<* "foo" "quux"))
   (is (not (sut/<* 1 1))))
 
-(defn- tokens [s]
-  (str/split s #"\W"))
+;;; Copied from nlp
+(defn- tokens
+  [s]
+  (map str/lower-case 
+       (re-seq #?(:clj #"[\p{L}'\d]+"
+                  :cljs #"[\w\d']+")    ;TODO there's a better translation of \p{L} at https://stackoverflow.com/questions/280712/how-can-i-use-unicode-aware-regular-expressions-in-javascript but it is too big and ugly to use
+                  s)))
+
 
 (deftest maxby-minby-test
   (is (= "tediously"
@@ -405,19 +413,34 @@ WHERE {{time-filter-clause}}
   (is (thrown? #?(:clj Exception :cljs js/Error)
        (sut/index-by-safely first '[[a 1] [b 2] [a 3]]))))
 
-;;; TODO fix so doesn't need math/
-#_
 (deftest group-by-multiple-test
-  (is (= {2 #{4 6 12 2 14 16 10 18 8}
-          3 #{15 6 3 12 9 18}
-          5 #{15 5 10}
-          7 #{7 14}
-          11 #{11}
-          13 #{13}
-          17 #{17}
-          19 #{19}}
-         (map-values set
-                     (group-by-multiple math/prime-factors (range 2 20))))))
+  (is (= {\a #{"kubla" "khan" "xanadu"},
+          \b #{"kubla"},
+          \d #{"did" "xanadu"},
+          \h #{"khan"},
+          \i #{"did" "in"},
+          \k #{"kubla" "khan"},
+          \l #{"kubla"},
+          \n #{"khan" "xanadu" "in"},
+          \u #{"kubla" "xanadu"},
+          \x #{"xanadu"}}
+         (sut/map-values set
+                         (sut/group-by-multiple seq (tokens "in Xanadu did Kubla Khan")))
+         )))
+
+(deftest index-by-multiple-test
+  (is (= {\a "khan",
+          \b "kubla",
+          \d "did",
+          \h "khan",
+          \i "did",
+          \k "khan",
+          \l "kubla",
+          \n "khan",
+          \u "kubla",
+          \x "xanadu"}
+         (sut/index-by-multiple seq (tokens "in Xanadu did Kubla Khan"))
+         )))
 
 (deftest coerce-numeric-test
   (is (nil? (sut/coerce-numeric nil)))
@@ -450,7 +473,7 @@ WHERE {{time-filter-clause}}
   (is (= ["pale" "sparsely" "panicgrass"]
          (sut/collecting
           (fn [collect]
-            (doseq [word (nlp/tokens text1)]
+            (doseq [word (tokens text1)]
               (when (re-find #"pa" word)
                 (collect word))))))))
 
@@ -458,7 +481,7 @@ WHERE {{time-filter-clause}}
   (is (= #{"pale" "sparsely" "panicgrass"}
          (sut/collecting-set
           (fn [collect]
-            (doseq [word (nlp/tokens text1)]
+            (doseq [word (tokens text1)]
               (when (re-find #"pa" word)
                 (collect word))))))))
 
@@ -466,7 +489,7 @@ WHERE {{time-filter-clause}}
   (let [silly
         (sut/collecting-merge
          (fn [collect]
-           (doseq [word (nlp/tokens text1)]
+           (doseq [word (tokens text1)]
              (collect {(first word) [word]}))))]
     (is (= (get silly \h) '("hollow" "horses'" "hooves" "heard" "heard")))))
 
