@@ -99,7 +99,7 @@
 ;;; An infinite sequence of factorials.
 ;;; OK, I was today years old when I learned *' exists. Should use it more. 
 (def factorials
-  (reductions *' 1 (rest (range))))
+  (reductions #?(:clj *' :cljs *) 1 (rest (range))))
 
 (defn prime-factors
   "Prime factors of n. Can include duplicates"

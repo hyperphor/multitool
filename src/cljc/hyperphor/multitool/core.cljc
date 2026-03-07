@@ -561,6 +561,9 @@
 
 ;;; ⩇⩆⩇ Sequences ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
+(defn third [s] (nth s 2))
+(defn fourth [s] (nth s 3))
+
 (defn extend-seq
   "Return a seq padded out to infinity with nils"
   [seq]
@@ -1164,8 +1167,16 @@
    (group-by by seq)))
 
 (defn dissoc-if
+  "f is a function on mapentries, return the map with the matching entries removed. Equivalent to (into {} (remove...)) so "
   [f hashmap]
   (apply dissoc hashmap (map first (filter f hashmap))))
+
+(comment
+  ;; Idea: replace dissoc-if with a family of fns like this, I guess with filter-m for pareallelism.
+  remove-m
+  remove-m-k                            ;-k, -v can take either predicate or constant val
+  remove-m-v
+  )
 
 (defn group-by-dups
   "Like group-by but return only groups with >1 member"
