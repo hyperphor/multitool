@@ -36,6 +36,14 @@
     ;; order should be scrambled (guess there is a very small chance it won't be!)
     (is (not (= (range 100) @acc)))))
 
+(deftest java-resource->string-test
+  (is (= "resource fixture contents\n"
+         (java-resource->string "hyperphor/multitool/resource_fixture.txt"))))
+
+(deftest inline-resource-test
+  (is (= "resource fixture contents\n"
+         (inline-resource "hyperphor/multitool/resource_fixture.txt"))))
+
 (deftest pdoseq*-test
   (let [acc (atom nil)]
     (pdoseq* [i '(a b c)

@@ -21,6 +21,10 @@
   [ms]
   (keys (first ms)))                    ;TODO assuming all keys in first rec
 
+(defn ms-fields+
+  [ms]
+  (apply u/lunion (map keys ms)))
+
 (defn ms-describe
   [ms]
   (let [fields (ms-fields ms)]

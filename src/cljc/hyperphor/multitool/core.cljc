@@ -64,6 +64,17 @@
     `(def ~name ~args (memoize-named '~name (fn ~(first body) ~@(rest body))))
     `(def ~name (memoize-named '~name (fn ~args ~@body)))))
 
+  (defmacro memoized
+    "Inline memoization"
+    [args expr]
+    (let [cache (gensym "memo__")]
+      (intern *ns* cache (atom {}))
+      `(if-let [hit# (find @~cache ~args)]
+         (val hit#)
+         (let [v# ~expr]
+           (swap! ~cache assoc ~args v#)
+           v#))))
+
 (defmacro def-lazy
   "Like `def` but produces a delay; value is acceessed via @ and won't be computed until needed"
   {:clj-kondo/lint-as 'clojure.core/def} ;TODO add these elsewhere, if can get it to work https://github.com/clj-kondo/clj-kondo/blob/master/doc/config.md#inline-macro-configuration
@@ -742,6 +753,8 @@
   [seq prop val]
   (some-thing #(= (prop %) val) seq))
 
+(declare get-by select-by)              ;better name?
+
 ;;; Formerly repeat-until
 (defn iterate-until
   "Iterate f on start until a value is produced that passes pred, returns value."
@@ -983,6 +996,12 @@
 
 
 ;;; ⩇⩆⩇ Vectors ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
+
+(defn flattenv
+  "Like core/flatten, but returns a vector"
+  [x]
+  (into [] (flatten x)))
+
 
 (defn real-vector?
   "True iff thing is a real vector. Shouldn't be necessary, but (vector? (first {:a 1})) ⇒ true. Most useful for walker fns."

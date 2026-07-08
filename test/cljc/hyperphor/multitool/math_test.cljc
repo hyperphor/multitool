@@ -31,6 +31,14 @@
     (is (= [1.0 4.0 9.0] (sut/powT [1 2 3] 2)))))
 
 
+(deftest rank-test
+  (is (= 0 (sut/rank 5)))
+  (is (= 1 (sut/rank [1 2 3])))
+  (is (= 2 (sut/rank [[1 2] [3 4]])))
+  (is (= 3 (sut/rank [[[1 2] [3 4]] [[5 6] [7 8]]])))
+  (is (= 1 (sut/rank '(1 2 3))))
+  (is (= 1 (sut/rank []))))
+
 (deftest interpolate-test
   (is (= 5.0 (sut/interpolate 0 10 0.5)))
   (is (= 1.0 (sut/interpolate 0 10 0.1))))

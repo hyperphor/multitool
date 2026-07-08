@@ -36,6 +36,11 @@
 (def absT (tensorize Math/abs))
 (def diffT (tensorize (fn [a b] (Math/abs (- a b)))))
 
+(defn rank
+  [t]
+  (if (sequential? t)
+    (inc (rank (first t)))
+    0))
 
 ;;; ⩇⩆⩇ Scaling and interpolation ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 

@@ -72,13 +72,6 @@
       (list (/ (double (- (System/nanoTime) start)) 1000000.0)
             ret))))
 
-;;; TODO better name
-(defn java-resource->string
-  [resource]
-  (-> resource
-      io/resource
-      io/input-stream
-      slurp))
 
 ;;; From Ken/Utilza
 (defn error-message
@@ -90,6 +83,25 @@
       (some-> e .getMessage)))
 
 ;;; TODO Java EDN resource, see also read-from-file
+
+;;; ⩇⩆⩇ Resources ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
+
+;;; TODO better name
+(defn java-resource->string
+  [resource]
+  (-> resource
+      io/resource
+      io/input-stream
+      slurp))
+
+(defmacro inline-resource
+  "Return a resource at compile time as a string. Mostly for use with Clojurescript"
+  [path]
+  (slurp (io/resource path)))
+
+(comment
+  ;; Example
+  (def prince-md (slurp-resource "text/prince.md")))
 
 ;;; ⩇⩆⩇ Files ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
@@ -254,6 +266,13 @@
   [old-path new-path]
   (.renameTo (io/file old-path) (io/file new-path)))
 
+(defn process-file
+  [f file]
+  (->> file
+       slurp
+       f
+       (spit file)))
+
 ;;; TODO this can alter EOF newlines, causing spurious git modifications. Argh
 (defn process-file-lines
   ([f in out]
@@ -340,7 +359,7 @@
 
 ;;; ⩇⩆⩇ Higher file fns ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
-;;; Very simple tab file i/o. Not sophisticated and won't handle some cases, use clojure.data.csv for real work
+;;; Very simple tab file i/o. Not sophisticated and won't handle some cases, use clojure.data.csv for real work. NOTE kill these they suck
 
 (defn read-tsv-rows
   "Read a tsv file into vectors"
