@@ -716,15 +716,5 @@ WHERE {{time-filter-clause}}
   (is (vector? (sut/flattenv '(1 (2 3) (4 (5 6))))))
   (is (= [1 2 3 4 5 6] (sut/flattenv '(1 (2 3) (4 (5 6)))))))
 
-#?(:clj
-(deftest memoized-test
-  (let [calls (atom 0)
-        f (fn [x] (sut/memoized [x] (do (swap! calls inc) (* x x))))]
-    (is (= 9 (f 3)))
-    (is (= 1 @calls))
-    (is (= 9 (f 3)))
-    (is (= 1 @calls) "second call with same args is cached, doesn't recompute")
-    (is (= 16 (f 4)))
-    (is (= 2 @calls) "different args recompute"))))
 
   

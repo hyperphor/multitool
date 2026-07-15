@@ -8,7 +8,7 @@
 
 (defn- ngrams-file
   [file]
-  (str "http://norvig.com/ngrams/" file))
+  (str "https://web.archive.org/web/20260306052332/https://norvig.com/ngrams/" file))
 
 (defn url-lines
   [url]

@@ -56,31 +56,22 @@
 
 (macros/deftime
 ;;; TODO This and its usages needs to be reworked for CLJS (Why? Macros probably)
-(defmacro defn-memoized
-  "Like `defn`, but produces a memoized function"
-  [name args & body]
-  ;; This crock is because you can't have multiple varadic arg signatures...sigh
-  (if (string? args)
-    `(def ~name ~args (memoize-named '~name (fn ~(first body) ~@(rest body))))
-    `(def ~name (memoize-named '~name (fn ~args ~@body)))))
+  (defmacro defn-memoized
+    "Like `defn`, but produces a memoized function"
+    [name args & body]
+    ;; This crock is because you can't have multiple varadic arg signatures...sigh
+    (if (string? args)
+      `(def ~name ~args (memoize-named '~name (fn ~(first body) ~@(rest body))))
+      `(def ~name (memoize-named '~name (fn ~args ~@body)))))
 
-  (defmacro memoized
-    "Inline memoization"
-    [args expr]
-    (let [cache (gensym "memo__")]
-      (intern *ns* cache (atom {}))
-      `(if-let [hit# (find @~cache ~args)]
-         (val hit#)
-         (let [v# ~expr]
-           (swap! ~cache assoc ~args v#)
-           v#))))
+;;; Note: an inline memoization fn would be nice, but those have issues with deployment
 
-(defmacro def-lazy
-  "Like `def` but produces a delay; value is acceessed via @ and won't be computed until needed"
-  {:clj-kondo/lint-as 'clojure.core/def} ;TODO add these elsewhere, if can get it to work https://github.com/clj-kondo/clj-kondo/blob/master/doc/config.md#inline-macro-configuration
-  [var & body]
-  `(def ~var (delay ~@body)))
-)
+  (defmacro def-lazy
+    "Like `def` but produces a delay; value is acceessed via @ and won't be computed until needed"
+    {:clj-kondo/lint-as 'clojure.core/def} ;TODO add these elsewhere, if can get it to work https://github.com/clj-kondo/clj-kondo/blob/master/doc/config.md#inline-macro-configuration
+    [var & body]
+    `(def ~var (delay ~@body)))
+  )
 
 ;;; ⩇⩆⩇ Exception handling ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
