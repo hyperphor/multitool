@@ -359,69 +359,7 @@
 
 ;;; ⩇⩆⩇ Higher file fns ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
-;;; Very simple tab file i/o. Not sophisticated and won't handle some cases, use clojure.data.csv for real work. NOTE kill these they suck
-
-(defn read-tsv-rows
-  "Read a tsv file into vectors"
-  [f & [separator]]
-  (map #(str/split % separator)
-       (file-lines f)))
-
-;;; TODO option to keywordize
-(defn read-tsv-maps
-  "Given a tsv file with a header line, returns seq where each elt is a map of field names to strings"
-  [f & [separator]]
-  (let [rows (read-tsv-rows f separator)]
-    (map #(zipmap (first rows) %)
-         (rest rows))))
-
-(defn write-tsv-rows
-  [f rows & [separator]]
-  (file-lines-out
-   f
-   (map (partial str/join separator) rows)))
-
-(defn write-tsv-maps
-  [f rows & [separator]]                ;TODO default separator
-  (let [cols (keys (first rows))]       ;TODO do a union and/or have a parameter
-  (file-lines-out
-   f
-   (map (partial str/join separator)
-        (cons (map name cols)
-              (map (fn [row] (map (fn [col] (get row col)) cols))
-                   rows))))))
-
-(defn dataset-fields
-  [ds]
-  (apply clojure.set/union (map #(set (keys %)) ds))  )
-
-(defn write-tsv-maps
-  [f rows & {:keys [separator cols] :or {separator \tab}}]                ;TODO default separator
-  (let [cols (or cols (dataset-fields rows))]
-  (file-lines-out
-   f
-   (map (partial str/join separator)
-        (cons (map name cols)
-              (map (fn [row] (map (fn [col] (get row col)) cols))
-                   rows))))))
-
-(defn read-csv-rows
-  "Read a csv file into vectors"
-  [f]
-  (read-tsv-rows f #"\,"))
-
-(defn read-csv-maps
-  "Read a csv file into maps"
-  [f]
-  (read-tsv-maps f #"\,"))
-
-(defn write-csv-rows
-  [f rows]
-  (write-tsv-rows f rows ","))
-
-(defn write-csv-maps
-  [f rows]
-  (write-tsv-maps f rows ","))
+;;; CSV/TSV reading and writing moved to hyperphor.multitool.csv
 
 (defn open-url
   [url]
