@@ -206,7 +206,10 @@
 (defn strip-chars
   "Removes every character of a given set from a string"
   [removed s]
-  (reduce str (remove #((set removed) %) s)))
+  ;; reduce with no init returns its single element unchanged (a bare
+  ;; Character, not a String) when exactly one char survives the remove --
+  ;; explicit "" init keeps this a String in every case.
+  (reduce str "" (remove #((set removed) %) s)))
 
 (defn contains-chars?
   [bads s]

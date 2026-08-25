@@ -1,4 +1,4 @@
-(defproject com.hyperphor/multitool "0.3.0"
+(defproject com.hyperphor/multitool "0.3.1"
   :description "Hyperphor utility library"
   :url "https://github.com/Hyperphor/multitool"
   :license {:name "Apache 2 License"
