@@ -610,6 +610,11 @@ WHERE {{time-filter-clause}}
   (is (= {} (sut/clean-maps {:a nil})))
   (is (= {:a 1 :b {:x 1} :c 3} (sut/clean-maps {:a 1 :b {:x 1 :y nil} :c 3}))))
 
+(deftest select-keys-as-test
+  (is (= {:a 1 :c 2} (sut/select-keys-as {:a 1 :b 2 :d 3} [:a [:b :c]])))
+  (is (= {} (sut/select-keys-as {:a 1} [:z [:y :x]])))
+  (is (= {:a 1} (sut/select-keys-as {:a 1 :b 2} [:a]))))
+
 (deftest all-keys-test
   (is (= #{:a :b :c :random}
          (sut/all-keys [{:a 1 :b 2} {:a 3 :c 4} {} {:random :bits}]))))

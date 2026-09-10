@@ -1349,6 +1349,16 @@ Ex: `(map-invert-multiple  {:a 1, :b 2, :c [3 4], :d 3}) ==>⇒ {2 #{:b}, 4 #{:c
       (assoc to (from map))
       (dissoc from)))
 
+(defn select-keys-as
+  "Like select-keys, but each spec is either a key, or a [from to] pair that renames the key.
+Ex: `(select-keys-as {:a 1 :b 2} [:a [:b :c]]) ⇒ {:a 1 :c 2}`"
+  [map specs]
+  (into {}
+        (for [spec specs
+              :let [[from to] (if (vector? spec) spec [spec spec])]
+              :when (contains? map from)]
+          [to (get map from)])))
+
 ;;; TODO maybe take multiple args)
 (defn default
   [map key val]
