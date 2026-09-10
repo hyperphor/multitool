@@ -613,7 +613,8 @@ WHERE {{time-filter-clause}}
 (deftest select-keys-as-test
   (is (= {:a 1 :c 2} (sut/select-keys-as {:a 1 :b 2 :d 3} [:a [:b :c]])))
   (is (= {} (sut/select-keys-as {:a 1} [:z [:y :x]])))
-  (is (= {:a 1} (sut/select-keys-as {:a 1 :b 2} [:a]))))
+  (is (= {:a 1} (sut/select-keys-as {:a 1 :b 2} [:a])))
+  (is (= {:a 1 :c 3} (sut/select-keys-as {:a 1 :b 2} [:a [:b :c inc]]))))
 
 (deftest all-keys-test
   (is (= #{:a :b :c :random}
