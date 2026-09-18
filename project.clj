@@ -8,6 +8,7 @@
                                      :password :env/clojars_password}]]
   :dependencies [[org.clojure/clojure "1.12.3"]
                  [org.clojure/clojurescript "1.12.42"]
+                 [environ "1.2.0"]
                  [net.cgrand/macrovich "0.2.1"]] ;Note: 0.2.2 has a fatal typo?
   :source-paths ["src/cljc" "src/clj" "src/cljs"]
   :test-paths ["test/cljc" "test/clj"]
