@@ -12,15 +12,6 @@
   []
   (throw (ex-info "thrown up" {})))
 
-;;; copied from nlp, avoid cross dependencies
-(defn tokens
-  [s]
-  (map str/lower-case 
-       (re-seq #?(:clj #"[\p{L}'\d]+"
-                  :cljs #"[\w\d']+")    ;TODO there's a better translation of \p{L} at https://stackoverflow.com/questions/280712/how-can-i-use-unicode-aware-regular-expressions-in-javascript but it is too big and ugly to use
-                  s)))
-
-
 (deftest truncate-string-test
   (is (= "foo" (sut/truncate-string "foo" 3)))
   (is (= "fo…" (sut/truncate-string "foo" 2)))
