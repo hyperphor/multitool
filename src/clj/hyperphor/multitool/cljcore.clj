@@ -5,7 +5,9 @@
    [clojure.pprint :as pprint]
    [clojure.java.io :as io]
    [clojure.java.shell :as shell]
-   [hyperphor.multitool.core :as core])
+   [clojure.edn :as edn]
+   [hyperphor.multitool.core :as core]
+   [environ.core :as env])
   (:import [java.util Base64 Date]
            [java.io File Reader PushbackReader]
            [java.nio.file Files]
@@ -290,16 +292,21 @@
    (fn [line]
      (core/str-replace-multiple map line))))
 
-;;; TODO generalize to more than one form?
-;;; TODO edn reader is better
-(defn read-from-file
+(defn read-edn
+  [resource]
+  (let [rdr (-> resource
+                io/reader
+                java.io.PushbackReader.)]
+    (edn/read rdr)))
+
+;;; was read-from-file
+(defn read-edn-from-file
   "Read a form from a file"
   [file]
-  (let [rdr (-> file
-                io/file
-                reader
-                PushbackReader.)]
-    (read rdr)))
+  (-> file
+      io/file
+      read-edn))                        ;TODO doe this work?
+
 
 ;;; ⩇⩆⩇ Date/time ⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇⩆⩇
 
@@ -484,6 +491,15 @@
       sh-str
       :out
       (str/split #"\|")))
+
+;;; Return the hash of the running system
+(core/def-lazy githash
+  (or (env/env :source-version) ; Heroku sets SOURCE_VERSION on deploy
+      ;; fall back to a local git call
+      (try
+        (let [rev (str/trim (:out (shell/sh "git" "rev-parse" "HEAD")))]
+          (when (seq rev) rev))
+        (catch Exception _ nil))))
 
 ;;; IDEA - better name. This doesn't work because macros
 #_ (def or-> some->)

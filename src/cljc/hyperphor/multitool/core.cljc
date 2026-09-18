@@ -395,6 +395,7 @@
 
 ;;; Macro for templating. Templates are strings in which {{<form>}} will be replaced by the value of evaling form (which can be a symbol or an xexpression)
 ;;; TODO also allow param map
+;;; TODO idea for an extension {{[foo]}} means foo can be nil. {{(or foo "")}} would do this without changes I guess
 (defmacro tx
   "Expand a template based on lexically defined variables"
   [template]
@@ -1058,6 +1059,14 @@
      )
    m1 m2))
 
+;;; TODO tests, name consistency. 
+(defn merge*
+  [mcar & mcdr]
+  (if (empty? mcdr)
+    mcar
+    (apply merge* (cons (merge-recursive mcar (first mcdr))
+                        (rest mcdr)))))
+
 ;;; The fns below are going to be in clojure.core someday
 ;;; https://clojure.atlassian.net/browse/CLJ-1959
 
@@ -1545,7 +1554,7 @@ Ex: `(select-keys-as {:a 1 :b 2} [:a [:b :c] [:a :d inc]]) ⇒ {:a 1 :c 2 :d 2}`
         e
       (:value (ex-data e)))))
 
-;;; TODO the path in question is not really sufficient for navigation due to special treatment of keywrds, maybe try to generalize
+;;; TODO the path in question is not really sufficient for navigation due to special treatment of keywords, maybe try to generalize
 ;;; TODO if that worked, you could do struct-ancestor to do a cheap, inefficient version of bk's reversable structures
 (defn walk-find-path
   "Walk over thing and return [<the first val for which f is non-nil>, <path>]"
@@ -1561,7 +1570,16 @@ Ex: `(select-keys-as {:a 1 :b 2} [:a [:b :c] [:a :d inc]]) ⇒ {:a 1 :c 2 :d 2}`
         e
       [(:value (ex-data e))
        (:context (ex-data e))]
-       )))
+      )))
+
+;;; Was alzabo.schema/struct-parent 
+;;; this is the cheap-ass way to do BK's 2-way structs. Not efficient of course
+;;; TODO tests
+(defn find-path
+  [struct thing]
+  (second
+   (walk-find-path 
+    #(= % thing) struct)))
 
 (defn clean-walk
   "Remove values from all maps in 'struct' based on 'pred' (default is `nullish?`). "

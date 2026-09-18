@@ -536,6 +536,13 @@ WHERE {{time-filter-clause}}
          (sut/merge-recursive {:a [1 2]} '{:a (3 4)})))
   )
 
+(deftest merge*-test
+  (is (= {:a {:b 7, :c 2, :e {:d 3, :foo :bar, :bob :rules}, :x 3, :y 5}})
+      (sut/merge*  {:a {:b 1 :c 2 :e {:d 3}}}
+                   {:a {:x 3 :y 5 :e {:foo :bar}}}
+                   {:a {:b 7 :e {:bob :rules}}}
+                   )))
+
 (deftest union-by-test
   (let [words1 #{"this" "is" "kind" "of" "silly"}
         words2 #{"dont" "you" "think"}
