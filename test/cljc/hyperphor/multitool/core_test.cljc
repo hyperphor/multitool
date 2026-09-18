@@ -536,6 +536,13 @@ WHERE {{time-filter-clause}}
          (sut/merge-recursive {:a [1 2]} '{:a (3 4)})))
   )
 
+(deftest merge*-test
+  (is (= {:a {:b 7, :c 2, :e {:d 3, :foo :bar, :bob :rules}, :x 3, :y 5}})
+      (sut/merge*  {:a {:b 1 :c 2 :e {:d 3}}}
+                   {:a {:x 3 :y 5 :e {:foo :bar}}}
+                   {:a {:b 7 :e {:bob :rules}}}
+                   )))
+
 (deftest union-by-test
   (let [words1 #{"this" "is" "kind" "of" "silly"}
         words2 #{"dont" "you" "think"}
@@ -609,6 +616,12 @@ WHERE {{time-filter-clause}}
   (is (= {:a 1 :c 3} (sut/clean-maps {:a 1 :b nil :c 3})))
   (is (= {} (sut/clean-maps {:a nil})))
   (is (= {:a 1 :b {:x 1} :c 3} (sut/clean-maps {:a 1 :b {:x 1 :y nil} :c 3}))))
+
+(deftest select-keys-as-test
+  (is (= {:a 1 :c 2} (sut/select-keys-as {:a 1 :b 2 :d 3} [:a [:b :c]])))
+  (is (= {} (sut/select-keys-as {:a 1} [:z [:y :x]])))
+  (is (= {:a 1} (sut/select-keys-as {:a 1 :b 2} [:a])))
+  (is (= {:a 1 :c 3} (sut/select-keys-as {:a 1 :b 2} [:a [:b :c inc]]))))
 
 (deftest all-keys-test
   (is (= #{:a :b :c :random}
