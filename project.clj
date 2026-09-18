@@ -3,7 +3,9 @@
   :url "https://github.com/Hyperphor/multitool"
   :license {:name "Apache 2 License"
             :url "https://opensource.org/licenses/Apache-2.0"}
-  :deploy-repositories [["clojars" {:sign-releases false}]]
+  :deploy-repositories [["clojars" {:sign-releases false
+                                     :username :env/clojars_username
+                                     :password :env/clojars_password}]]
   :dependencies [[org.clojure/clojure "1.12.3"]
                  [org.clojure/clojurescript "1.12.42"]
                  [net.cgrand/macrovich "0.2.1"]] ;Note: 0.2.2 has a fatal typo?
